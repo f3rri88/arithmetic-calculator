@@ -4,5 +4,5 @@ import re
 
 def is_filepath(filepath):
     '''Returns True if the filepath is valid, False if not.'''
-    re.match(r'^(.*/)?(?:$|(.+?)(?:(\.[^.]*$)|$))', filepath)
-    os.path.isfile(filepath)
+    return re.match(r'^(.*/)?(?:$|(.+?)(?:(\.[^.]*$)|$))', filepath) \
+        and os.path.isfile(filepath)
