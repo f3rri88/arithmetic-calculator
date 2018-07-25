@@ -2,7 +2,7 @@ import unittest
 
 
 class CommonTest(unittest.TestCase):
-    '''CommonLib TestCase'''
+    '''CommonTest TestCase'''
 
-    def test_arg_validators(self):
+    def test_something(self):
         self.assertTrue(True)

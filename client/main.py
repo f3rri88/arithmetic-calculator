@@ -10,4 +10,13 @@ class Client():
     '''
 
     def __init__(self):
+        '''Initialize the Client class with the given args.'''
+        pass
+
+    def send(self, data):
+        '''Sends a batch of data.'''
+        pass
+
+    def recv(self):
+        '''Receives data.'''
         pass
