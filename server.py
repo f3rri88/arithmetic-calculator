@@ -13,11 +13,17 @@ def parse_args(raw_args):
     '''
     parser = argparse.ArgumentParser(
         description='Arithmetic Calculator Server')
-    parser.add_argument(
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
         '-v',
         '--verbose',
         action='store_true',
-        help='sets the logging level to DEBUG')
+        help='verbose (debug) log')
+    group.add_argument(
+        '-q',
+        '--quiet',
+        action='store_true',
+        help='Silent mode, only log warnings and errors')
     parser.add_argument(
         '--version',
         action='version',
