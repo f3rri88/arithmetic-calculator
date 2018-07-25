@@ -33,9 +33,7 @@ def parse_args(raw_args):
 
 
 def main():
-    '''
-    Main function that initiates the client itself.
-    '''
+    '''Main function that initiates the client itself.'''
     print('Client is running...')
 
 
