@@ -107,5 +107,5 @@ venv.bak/
 .mypy_cache/
 
 # my own excludes
-files/out.txt
+files/
 logs/

@@ -72,7 +72,7 @@ def main():
     setup_logging(args.logging_level)
 
     # Start our server
-    server = CalculationServer('localhost', 1234, args.processes)
+    server = CalculationServer('0.0.0.0', 1234, args.processes)
     try:
         server.run()
     except:

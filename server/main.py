@@ -1,8 +1,13 @@
 import socket
 import struct
 import logging
+import time
+from collections import namedtuple
 from multiprocessing import Process, Pipe
-from server.arithmetics.precedence_climbing import compute
+from server.calculation import OperationConsumer
+
+
+ProcessPipe = namedtuple('ProcessPipe', 'process pipe')
 
 
 class CalculationServer():
@@ -16,9 +21,10 @@ class CalculationServer():
     def __init__(self, host, port, processes):
         '''Initialize the Server class with the given args.'''
         self.address = (host, port)
-        self._processes = processes
+        self._process_num = processes
         self._logger = logging.getLogger(__name__)
         self.running = False
+        self._process_pool = []
 
     def run(self):
         '''Starts running the server on the given address.'''
@@ -38,6 +44,13 @@ class CalculationServer():
 
         self._socket.listen(1)
         self.running = True
+
+        for _ in range(self._process_num):
+            parent_pipe, child_pipe = Pipe(duplex=True)
+            p = OperationConsumer(child_pipe)
+            self._process_pool.append(ProcessPipe(p, parent_pipe))
+            p.start()
+
         try:
             while self.running:
                 try:
@@ -68,6 +81,10 @@ class CalculationServer():
         '''Stops the server.'''
         self._logger.info('Stopping...')
         self.running = False
+        for p in self._process_pool:
+            p.pipe.send('quit')
+            p.pipe.close()
+            p.process.join()
         self._socket.close()
         self._logger.info('Server stopped')
 
@@ -76,7 +93,7 @@ class CalculationServer():
         binary_data = struct.pack('>I', len(data)) + data.encode('utf8')
         self._logger.info('Sending data')
         connection.sendall(binary_data)
-        self._logger.debug('Sent data:\n{}'.format(data))
+        # self._logger.debug('Sent data:\n{}'.format(data))
         self._logger.info('Data sent successfully')
 
     def recv(self, connection):
@@ -86,10 +103,10 @@ class CalculationServer():
             return None
         size = struct.unpack('>I', raw_size)[0]
         recv_data = self._recv_all(connection, size).decode('utf8').rstrip()
-        self._logger.debug('Received data:\n{}'.format(recv_data))
+        # self._logger.debug('Received data:\n{}'.format(recv_data))
         self._logger.info(
             'Received data from {}:{} successfully'
-            .format(*connection.getsockname()))
+            .format(*connection.getpeername()))
         return recv_data
 
     def _recv_all(self, connection, size):
@@ -104,42 +121,30 @@ class CalculationServer():
 
     def _handle_request(self, connection, data):
         results = []
-        self._logger.info('Starting evaluation of operations')
+        self._logger.info('Starting computing operations')
 
-        # pool = []
-        # for _ in range(self._processes):
-        #     parent_pipe, child_pipe = Pipe()
-        #     p = Process(
-        #         target=self._evaluate, args=(child_pipe,))
-        #     pool.append((p, parent_pipe))
-        #     p.start()
+        results = []
+        all_operations = data.splitlines()
 
-        for i, op in enumerate(data.splitlines()):
-            try:
-                r = compute(op)
-            except Exception:
-                self._logger.warning(
-                    'This operation cannot be processed: {}\n'
-                    'Skipping this line'.format(op),
-                    exc_info=True)
-                continue
-            self._logger.debug('Iteration {}: {} = {}'.format(i, op, r))
-            
-            results.append(str(r))
-        self._logger.info('Finished evaluation of operations')
+        def chunks(l, n):
+            '''Yield n successive chunks from l.'''
+            newn = int(1.0 * len(l) / n + 0.5)
+            for i in range(0, n-1):
+                yield l[i*newn:i*newn+newn]
+            yield l[n*newn-newn:]
+
+        before = time.time()
+        for i, chunk in enumerate(chunks(all_operations, self._process_num)):
+            self._process_pool[i].pipe.send((i, chunk))
+
+        for p in self._process_pool:
+            msg = p.pipe.recv()
+            self._logger.debug(msg)
+            results += msg[1]
+        after = time.time()
+        self._logger.info(
+            'Time taken to perform operations: {}'.format(after - before))
+
+        self._logger.info('Finished computing operations')
         res = '\n'.join(results)
         self.send(connection, res)
-        self._logger.info('Data sent back to client successfully')
-
-    # def _evaluate(self, pipe):
-    #     while True:
-    #         operation = pipe.recv()
-    #         try:
-    #             result = compute(operation)
-    #             self._logger.debug(
-    #                 'Iteration {}: {} = {}'.format(index, operation, result))
-    #         except Exception:
-    #             self._logger.warning(
-    #                 'This operation cannot be processed: "{}"\n'
-    #                 'Skipping this line'.format(operation),
-    #                 exc_info=True)

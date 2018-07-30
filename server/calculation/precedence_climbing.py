@@ -54,7 +54,7 @@ OPINFO_MAP = {
 
 
 def parse_error(msg):
-    raise RuntimeError(msg)
+    raise SyntaxError(msg)
 
 
 def compute_atom(tokenizer):
