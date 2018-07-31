@@ -1,7 +1,7 @@
 import timeit
 import unittest
 # from server import Server
-from server.calculation.precedence_climbing import compute
+from server.calculation.shunting_yard import compute
 
 
 class ServerTest(unittest.TestCase):
@@ -39,61 +39,3 @@ class ArithmeticsTest(unittest.TestCase):
         self.assertEqual(
             compute('98 - 64 - 95 * 26'),
             eval('98 - 64 - 95 * 26'))
-
-    def test_timing(self):
-        SETUP_CODE = '''
-from server.calculation.precedence_climbing import compute
-'''
-        TEST_CODE = '''
-compute('38 - 83 - 52 + 30 - 24 - 89 / 66 + 18 / 7 * 77')
-'''
-        # timeit.repeat statement
-        times = timeit.repeat(
-            setup=SETUP_CODE,
-            stmt=TEST_CODE,
-            repeat=3,
-            number=1)
-
-        print('Time taken to evaluate one operation: {}'.format(times))
-
-        SETUP_CODE = '''
-from server.calculation.precedence_climbing import compute
-f = open("files/testops.txt", 'r')
-'''
-        TEST_CODE = '''
-for line in f:
-    try:
-        compute(line)
-    except:
-        continue
-'''
-
-        # timeit.repeat statement
-        times = timeit.repeat(
-            setup=SETUP_CODE,
-            stmt=TEST_CODE,
-            repeat=3,
-            number=1)
-
-        print('Time taken to evaluate test operations: {}'.format(times))
-
-        SETUP_CODE = '''
-from server.calculation.precedence_climbing import compute
-f = open("files/operations.txt", "r")
-'''
-        TEST_CODE = '''
-for line in f:
-    try:
-        compute(line)
-    except:
-        continue
-'''
-
-        # timeit.repeat statement
-        times = timeit.repeat(
-            setup=SETUP_CODE,
-            stmt=TEST_CODE,
-            repeat=3,
-            number=1)
-
-        print('Time taken to evaluate all operations: {}'.format(times))

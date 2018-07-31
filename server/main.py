@@ -133,17 +133,13 @@ class CalculationServer():
                 yield l[i*newn:i*newn+newn]
             yield l[n*newn-newn:]
 
-        before = time.time()
         for i, chunk in enumerate(chunks(all_operations, self._process_num)):
-            self._process_pool[i].pipe.send((i, chunk))
+            self._process_pool[i].pipe.send(chunk)
 
         for p in self._process_pool:
             msg = p.pipe.recv()
             self._logger.debug(msg)
-            results += msg[1]
-        after = time.time()
-        self._logger.info(
-            'Time taken to perform operations: {}'.format(after - before))
+            results += msg
 
         self._logger.info('Finished computing operations')
         res = '\n'.join(results)

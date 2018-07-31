@@ -1,6 +1,6 @@
 import logging
 from multiprocessing import Process, current_process
-from server.calculation.precedence_climbing import compute
+from server.calculation.shunting_yard import compute
 
 
 class OperationConsumer(Process):
@@ -20,14 +20,14 @@ class OperationConsumer(Process):
                     self._running = False
                     self._pipe.close()
                 else:
-                    order, ops = msg
-                    res = []
+                    ops = msg
+                    results = []
                     for op in ops:
                         try:
                             r = compute(op)
-                            res.append(str(r))
+                            results.append(str(r))
                         except SyntaxError:
                             self._logger.warning(
                                 'The operation "{}" cannot be computed, '
-                                'it will be skipped'.format(op),)
-                    self._pipe.send((order, res))
+                                'it will be skipped'.format(op))
+                    self._pipe.send(results)
