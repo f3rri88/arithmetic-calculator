@@ -43,12 +43,19 @@ def parse_args():
     parser.add_argument(
         '-p',
         '--processes',
-        type=int,
+        type=processes_type,
         metavar='X',
         default=2,
         help='Number of processes that the server will spawn')
     args = parser.parse_args()
     return args
+
+
+def processes_type(x):
+    x = int(x)
+    if x < 2:
+        raise argparse.ArgumentTypeError("Minimum number of processes is 2")
+    return x
 
 
 def setup_logging(log_level):
