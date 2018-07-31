@@ -7,7 +7,7 @@ services:
     build:
       context: ../
       dockerfile: docker/server/Dockerfile
-    command: python server.py -p 1
+    command: python server.py -p 4
     ports:
       - 1234:1234
 

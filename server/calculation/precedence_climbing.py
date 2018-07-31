@@ -1,41 +1,4 @@
-from collections import namedtuple
-import re
-
-
-Tok = namedtuple('Tok', 'name value')
-
-
-class with_current(object):
-
-    def __init__(self, f):
-        self._f = f
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        try:
-            self.current = next(self._gen)
-        except StopIteration:
-            self.current = None
-        return self.current
-
-    def __call__(self, *args, **kw):
-        self._gen = self._f(*args, **kw)
-        return self
-
-    def __repr__(self):
-        return '{}(current={})'.format(self._f.__name__, str(self.current))
-
-
-@with_current
-def tokenize(source):
-    pattern = re.compile(r"\s*(?:(\d+)|(.))")
-    for number, operator in pattern.findall(source):
-        if number:
-            yield Tok('NUMBER', number)
-        else:
-            yield Tok('BINOP', operator)
+from server.calculation.tokenize import tokenize
 
 
 PRECEDENCE_MAP = {
@@ -62,15 +25,10 @@ def compute_atom(tokenizer):
 def compute_expr(tokenizer, min_prec):
     atom_lhs = compute_atom(tokenizer)
 
-    while True:
-        cur = tokenizer.current
-        if (cur is None or
-                cur.name != 'BINOP' or
-                PRECEDENCE_MAP[cur.value] < min_prec):
-            break
-
-        # Inside this loop the current token is a binary operator
-        assert cur.name == 'BINOP'
+    cur = tokenizer.current
+    while (cur is not None and
+            cur.name == 'BINOP' and
+            PRECEDENCE_MAP[cur.value] >= min_prec):
 
         # Get the operator's precedence and associativity, and compute a
         # minimal precedence for the recursive call
@@ -85,6 +43,7 @@ def compute_expr(tokenizer, min_prec):
 
         # Update lhs with the new value
         atom_lhs = compute_op(op, atom_lhs, atom_rhs)
+        cur = tokenizer.current
 
     return atom_lhs
 
