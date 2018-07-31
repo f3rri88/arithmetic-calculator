@@ -5,74 +5,57 @@ import re
 Tok = namedtuple('Tok', 'name value')
 
 
-class Tokenizer(object):
-    """ Simple tokenizer object. The cur_token attribute holds the current
-        token (Tok). Call get_next_token() to advance to the
-        next token. cur_token is None before the first token is
-        taken and after the source ends.
-    """
-    TOKPATTERN = re.compile(r"\s*(?:(\d+)|(.))")
+class with_current(object):
 
-    def __init__(self, source):
-        self._tokgen = self._gen_tokens(source)
-        self.cur_token = None
+    def __init__(self, f):
+        self._f = f
 
-    def get_next_token(self):
-        """ Advance to the next token, and return it.
-        """
+    def __iter__(self):
+        return self
+
+    def __next__(self):
         try:
-            self.cur_token = next(self._tokgen)
+            self.current = next(self._gen)
         except StopIteration:
-            self.cur_token = None
-        return self.cur_token
+            self.current = None
+        return self.current
 
-    def _gen_tokens(self, source):
-        for number, operator in self.TOKPATTERN.findall(source):
-            if number:
-                yield Tok('NUMBER', number)
-            elif operator == '(':
-                yield Tok('LEFTPAREN', '(')
-            elif operator == ')':
-                yield Tok('RIGHTPAREN', ')')
-            else:
-                yield Tok('BINOP', operator)
+    def __call__(self, *args, **kw):
+        self._gen = self._f(*args, **kw)
+        return self
 
     def __repr__(self):
-        return 'Tokenizer(cur_token=%s)' % str(self.cur_token)
+        return '{}(current={})'.format(self._f.__name__, str(self.current))
 
 
-# For each operator, a (precedence, associativity) pair.
-OpInfo = namedtuple('OpInfo', 'prec assoc')
+@with_current
+def tokenize(source):
+    pattern = re.compile(r"\s*(?:(\d+)|(.))")
+    for number, operator in pattern.findall(source):
+        if number:
+            yield Tok('NUMBER', number)
+        else:
+            yield Tok('BINOP', operator)
 
-OPINFO_MAP = {
-    '+':    OpInfo(1, 'LEFT'),
-    '-':    OpInfo(1, 'LEFT'),
-    '*':    OpInfo(2, 'LEFT'),
-    '/':    OpInfo(2, 'LEFT'),
-    '^':    OpInfo(3, 'RIGHT'),
+
+PRECEDENCE_MAP = {
+    '+':    1,
+    '-':    1,
+    '*':    2,
+    '/':    2,
 }
 
 
-def parse_error(msg):
-    raise SyntaxError(msg)
-
-
 def compute_atom(tokenizer):
-    tok = tokenizer.cur_token
-    if tok.name == 'LEFTPAREN':
-        tokenizer.get_next_token()
-        val = compute_expr(tokenizer, 1)
-        if tokenizer.cur_token.name != 'RIGHTPAREN':
-            parse_error('unmatched "("')
-        tokenizer.get_next_token()
-        return val
-    elif tok is None:
-            parse_error('source ended unexpectedly')
+    tok = tokenizer.current
+    if tok is None:
+        raise SyntaxError('Operation ended unexpectedly')
     elif tok.name == 'BINOP':
-        parse_error('expected an atom, not an operator "%s"' % tok.value)
+        raise SyntaxError(
+            'Expected an operand, not an operator "{}"'.format(tok.value))
     else:
         assert tok.name == 'NUMBER'
-        tokenizer.get_next_token()
+        next(tokenizer)
         return int(tok.value)
 
 
@@ -80,10 +63,10 @@ def compute_expr(tokenizer, min_prec):
     atom_lhs = compute_atom(tokenizer)
 
     while True:
-        cur = tokenizer.cur_token
+        cur = tokenizer.current
         if (cur is None or
                 cur.name != 'BINOP' or
-                OPINFO_MAP[cur.value].prec < min_prec):
+                PRECEDENCE_MAP[cur.value] < min_prec):
             break
 
         # Inside this loop the current token is a binary operator
@@ -92,12 +75,12 @@ def compute_expr(tokenizer, min_prec):
         # Get the operator's precedence and associativity, and compute a
         # minimal precedence for the recursive call
         op = cur.value
-        prec, assoc = OPINFO_MAP[op]
-        next_min_prec = prec + 1 if assoc == 'LEFT' else prec
+        prec = PRECEDENCE_MAP[op]
+        next_min_prec = prec + 1
 
         # Consume the current token and prepare the next one for the
         # recursive call
-        tokenizer.get_next_token()
+        next(tokenizer)
         atom_rhs = compute_expr(tokenizer, next_min_prec)
 
         # Update lhs with the new value
@@ -107,8 +90,6 @@ def compute_expr(tokenizer, min_prec):
 
 
 def compute_op(op, lhs, rhs):
-    # lhs = int(lhs)
-    # rhs = int(rhs)
     if op == '+':
         return lhs + rhs
     elif op == '-':
@@ -117,13 +98,11 @@ def compute_op(op, lhs, rhs):
         return lhs * rhs
     elif op == '/':
         return lhs / rhs
-    elif op == '^':
-        return lhs ** rhs
     else:
-        parse_error('unknown operator "%s"' % op)
+        raise SyntaxError('This operator is not recognized "{}"'.format(op))
 
 
-def compute(s):
-    t = Tokenizer(s)
-    t.get_next_token()
+def compute(op):
+    t = tokenize(op)
+    next(t)
     return compute_expr(t, 1)

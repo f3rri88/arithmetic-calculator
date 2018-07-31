@@ -28,7 +28,6 @@ class OperationConsumer(Process):
                             res.append(str(r))
                         except SyntaxError:
                             self._logger.warning(
-                                'This operation cannot be processed: "{}"\n'
-                                'Skipping this line'.format(op),
-                                exc_info=True)
+                                'The operation "{}" cannot be computed, '
+                                'it will be skipped'.format(op),)
                     self._pipe.send((order, res))

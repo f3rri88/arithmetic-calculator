@@ -15,17 +15,6 @@ class ArithmeticsTest(unittest.TestCase):
     '''Arithmetics TestCase'''
 
     def test_evaluation(self):
-        # self.assertEqual(compute('1 + 2 * 3'), 7)
-        # self.assertEqual(compute('7 - 9 * (2 - 3)'), 16)
-        # self.assertEqual(compute('2 * 3 * 4'), 24)
-        # self.assertEqual(compute('2 ^ 3 ^ 4'), 2 ** (3 ** 4))
-        # self.assertEqual(compute('(2 ^ 3) ^ 4'), 4096)
-        # self.assertEqual(compute('5'), 5)
-        # self.assertEqual(compute('4 + 2'), 6)
-        # self.assertEqual(compute('9 - 8 - 7'), -6)
-        # self.assertEqual(compute('9 - (8 - 7)'), 8)
-        # self.assertEqual(compute('(9 - 8) - 7'), -6)
-        # self.assertEqual(compute('2 + 3 ^ 2 * 3 + 4'), 33)
         self.assertEqual(
             compute('38 - 83 - 52 + 30 - 24 - 89 / 66 + 18 / 7 * 77'),
             eval('38 - 83 - 52 + 30 - 24 - 89 / 66 + 18 / 7 * 77'))
