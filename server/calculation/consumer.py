@@ -4,15 +4,21 @@ from server.calculation.shunting_yard import compute
 
 
 class OperationConsumer(Process):
+    '''
+    Process derived class.
+    Consumes lists of operations in raw strings through its pipe,
+    computates a result and sends back another list containing the results.
+    '''
 
     def __init__(self, pipe):
         Process.__init__(self)
         self._pipe = pipe
-        self._running = True
 
     def run(self):
+        '''Method that is executed when the process has been started'''
         self._logger = logging.getLogger(
             '{}:{}'.format(__name__, current_process().name))
+        self._running = True
         while self._running:
             if self._pipe.poll():
                 msg = self._pipe.recv()

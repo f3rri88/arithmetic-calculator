@@ -89,21 +89,21 @@ class CalculationServer():
         self._logger.info('Server stopped')
 
     def send(self, connection, data):
-        '''Sends the data.'''
+        '''Sends data to an accepted connection.'''
         binary_data = struct.pack('>I', len(data)) + data.encode('utf8')
         self._logger.info('Sending data')
         connection.sendall(binary_data)
-        # self._logger.debug('Sent data:\n{}'.format(data))
+        self._logger.debug('Sent data:\n{}'.format(data))
         self._logger.info('Data sent successfully')
 
     def recv(self, connection):
-        '''Receives data.'''
+        '''Receives data from an accepted connection.'''
         raw_size = self._recv_all(connection, 4)
         if not raw_size:
             return None
         size = struct.unpack('>I', raw_size)[0]
         recv_data = self._recv_all(connection, size).decode('utf8').rstrip()
-        # self._logger.debug('Received data:\n{}'.format(recv_data))
+        self._logger.debug('Received data:\n{}'.format(recv_data))
         self._logger.info(
             'Received data from {}:{} successfully'
             .format(*connection.getpeername()))
@@ -120,10 +120,9 @@ class CalculationServer():
         return data
 
     def _handle_request(self, connection, data):
-        results = []
+        '''Handles an accepted connection and sends results back'''
         self._logger.info('Starting computing operations')
 
-        results = []
         all_operations = data.splitlines()
 
         def chunks(l, n):
@@ -133,9 +132,12 @@ class CalculationServer():
                 yield l[i*newn:i*newn+newn]
             yield l[n*newn-newn:]
 
+        # Sends to each process a chunk of data to process
         for i, chunk in enumerate(chunks(all_operations, self._process_num)):
             self._process_pool[i].pipe.send(chunk)
 
+        # Iterates through the existing processes to get back the results
+        results = []
         for p in self._process_pool:
             msg = p.pipe.recv()
             self._logger.debug(msg)
