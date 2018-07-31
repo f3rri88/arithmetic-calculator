@@ -4,8 +4,8 @@ import unittest
 from server.calculation.shunting_yard import compute
 
 
-class ServerTest(unittest.TestCase):
-    '''Server TestCase'''
+class SocketTest(unittest.TestCase):
+    '''Server socket TestCase'''
 
     def test_anotherthing(self):
         self.assertTrue(True)
