@@ -7,7 +7,11 @@ import argparse
 import logging
 import logging.config
 from pathlib import Path
+from socket import error as socket_error
 from client import __version__, CalculationClient
+
+
+logger = logging.getLogger(__name__)
 
 
 def parse_args():
@@ -73,13 +77,20 @@ def main():
     client = CalculationClient()
     try:
         client.connect('localhost', 1234)
-    except:
+    except socket_error:
+        logger.error("The connection could not be established", exc_info=True)
         sys.exit(1)
 
     client.send(args.input_file.read())
     args.input_file.close()
 
-    data = client.recv()
+    try:
+        data = client.recv()
+    except socket_error:
+        logger.error(
+            "The server connection closed unexpectedly",
+            exc_info=True)
+        sys.exit(1)
     args.output_file.writelines(data)
     args.output_file.close()
 

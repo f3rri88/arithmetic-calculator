@@ -16,7 +16,7 @@ class CalculationClient():
         self._logger = logging.getLogger(__name__)
 
     def connect(self, host, port):
-        '''Connects to a server on the given address'''
+        '''Connects to a server on the given address.'''
         self._logger.info('Connecting with server on {}:{}'.format(host, port))
         self.server_address = (host, port)
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -33,7 +33,7 @@ class CalculationClient():
         self._logger.info('Connection established')
 
     def send(self, data):
-        '''Sends the data.'''
+        '''Sends to the connected endpoint.'''
         if not self._socket:
             self._logger.warn('No connection has been established yet')
             return
@@ -44,7 +44,7 @@ class CalculationClient():
         self._logger.info('Data sent successfully')
 
     def recv(self):
-        '''Receives data.'''
+        '''Receives data from the connected endpoint.'''
         raw_size = self._recv_all(4)
         if not raw_size:
             return None
