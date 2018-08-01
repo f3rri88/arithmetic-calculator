@@ -7,7 +7,7 @@ class OperationConsumer(Process):
     '''
     Process derived class.
     Consumes lists of operations in raw strings through its pipe,
-    computates a result and sends back another list containing the results.
+    computates results and sends back another list containing them.
     '''
 
     def __init__(self, pipe):
