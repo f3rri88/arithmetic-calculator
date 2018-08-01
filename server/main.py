@@ -28,6 +28,7 @@ class CalculationServer():
 
     def run(self):
         '''Starts running the server on the given address.'''
+        # Create and bind socket
         self._logger.info(
             'Starting server on {} port {}'.format(*self.address))
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -42,15 +43,9 @@ class CalculationServer():
             raise
         self._logger.info('Server is running...')
 
+        # Start listening for requests
         self._socket.listen(1)
         self.running = True
-
-        for _ in range(self._process_num):
-            parent_pipe, child_pipe = Pipe(duplex=True)
-            p = OperationConsumer(child_pipe)
-            self._process_pool.append(ProcessPipe(p, parent_pipe))
-            p.start()
-
         try:
             while self.running:
                 try:
@@ -81,10 +76,6 @@ class CalculationServer():
         '''Stops the server.'''
         self._logger.info('Stopping...')
         self.running = False
-        for p in self._process_pool:
-            p.pipe.send('quit')
-            p.pipe.close()
-            p.process.join()
         self._socket.close()
         self._logger.info('Server stopped')
 
@@ -123,7 +114,7 @@ class CalculationServer():
         '''Handles an accepted connection and sends results back'''
         self._logger.info('Starting computing operations')
 
-        all_operations = data.splitlines()
+        before = time.time()
 
         def chunks(l, n):
             '''Yield n successive chunks from l.'''
@@ -132,16 +123,29 @@ class CalculationServer():
                 yield l[i*newn:i*newn+newn]
             yield l[n*newn-newn:]
 
-        # Sends to each process a chunk of data to process
-        for i, chunk in enumerate(chunks(all_operations, self._process_num)):
-            self._process_pool[i].pipe.send(chunk)
+        # Creates the defined number of processes and
+        # sends to each one a chunk of data to process
+        chunk_gen = chunks(data.splitlines(), self._process_num)
+        for _ in range(self._process_num):
+            parent_pipe, child_pipe = Pipe(duplex=True)
+            p = OperationConsumer(child_pipe)
+            self._process_pool.append(ProcessPipe(p, parent_pipe))
+            p.start()
+            chunk = next(chunk_gen)
+            parent_pipe.send(chunk)
 
         # Iterates through the existing processes to get back the results
         results = []
         for p in self._process_pool:
             msg = p.pipe.recv()
-            self._logger.debug(msg)
+            p.pipe.send('quit')
+            p.process.join()
+            p.pipe.close()
             results += msg
+
+        self._process_pool.clear()
+        after = time.time()
+        self._logger.info('Time taken: {}'.format(after - before))
 
         self._logger.info('Finished computing operations')
         res = '\n'.join(results)
