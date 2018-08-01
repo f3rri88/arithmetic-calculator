@@ -123,8 +123,8 @@ class CalculationServer():
                 yield l[i*newn:i*newn+newn]
             yield l[n*newn-newn:]
 
-        # Creates the defined number of processes and
-        # sends to each one a chunk of data to process
+        # Create the defined number of processes and
+        # send to each one a chunk of data to process
         chunk_gen = chunks(data.splitlines(), self._process_num)
         for _ in range(self._process_num):
             parent_pipe, child_pipe = Pipe(duplex=True)
@@ -134,7 +134,8 @@ class CalculationServer():
             chunk = next(chunk_gen)
             parent_pipe.send(chunk)
 
-        # Iterates through the existing processes to get back the results
+        # Iterate through the existing processes to get back the results
+        # and wait to the process to join and close pipes
         results = []
         for p in self._process_pool:
             msg = p.pipe.recv()
