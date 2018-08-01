@@ -1,6 +1,0 @@
-default:
-  port: 1234
-
-development:
-
-production:

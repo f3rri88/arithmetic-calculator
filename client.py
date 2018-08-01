@@ -14,6 +14,14 @@ from client import __version__, CalculationClient
 logger = logging.getLogger(__name__)
 
 
+def port_type(x):
+    x = int(x)
+    if x < 0 or x > 65535:
+        raise argparse.ArgumentTypeError(
+            "Port value must be between 0 and 65535")
+    return x
+
+
 def parse_args():
     '''
     Takes command line arguments and parses them to return a valid list.
@@ -41,6 +49,16 @@ def parse_args():
         '--version',
         action='version',
         version='%(prog)s {}'.format(__version__))
+    parser.add_argument(
+        '--host',
+        type=str,
+        default='localhost',
+        help='Host where the server is running on')
+    parser.add_argument(
+        '--port',
+        type=port_type,
+        default=1234,
+        help='Port where the server is running on')
     parser.add_argument(
         'input_file',
         type=argparse.FileType(mode='r'),
@@ -76,7 +94,7 @@ def main():
     # Start our client
     client = CalculationClient()
     try:
-        client.connect('localhost', 1234)
+        client.connect(args.host, args.port)
     except socket_error:
         logger.error("The connection could not be established", exc_info=True)
         sys.exit(1)
