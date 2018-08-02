@@ -79,4 +79,4 @@ A log file will be created in a logs folder inside the project. Log file is alwa
 
 ## License
 
-This project is licensed under the UnLicense - see the [LICENSE](LICENSE) file for details
+This project is licensed under the Unlicense - see the [LICENSE](LICENSE) file for details
