@@ -107,12 +107,15 @@ def main():
         data = client.recv()
     except socket_error:
         logger.error(
-            "The server connection closed unexpectedly",
+            'The server connection closed unexpectedly',
             exc_info=True)
         sys.exit(1)
+    except (SystemExit, KeyboardInterrupt):
+        sys.exit(1)
+
     if data is None:
         logger.error(
-            "Computation went wrong, check that the server is still running")
+            'Computation went wrong, check that the server is still running')
         sys.exit(1)
     args.output_file.writelines(data)
     args.output_file.close()

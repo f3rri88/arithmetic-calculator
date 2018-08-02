@@ -45,15 +45,22 @@ class CalculationClient():
 
     def recv(self):
         '''Receives data from the connected endpoint.'''
-        raw_size = self._recv_all(4)
-        if not raw_size:
-            return None
-        size = struct.unpack('>I', raw_size)[0]
-        recv_data = self._recv_all(size).decode('utf8').rstrip()
-        self._logger.debug('Received data:\n{}'.format(recv_data))
-        self._logger.info(
-            'Received data from server successfully')
-        return recv_data
+        try:
+            raw_size = self._recv_all(4)
+            if not raw_size:
+                return None
+            size = struct.unpack('>I', raw_size)[0]
+            recv_data = self._recv_all(size).decode('utf8').rstrip()
+            self._logger.debug('Received data:\n{}'.format(recv_data))
+            self._logger.info(
+                'Received data from server successfully')
+            return recv_data
+        except (SystemExit, KeyboardInterrupt):
+            self._logger.warning(
+                'Interrupt detected, exiting...')
+            self._socket.shutdown(socket.SHUT_RDWR)
+            self._socket.close()
+            raise
 
     def _recv_all(self, size):
         '''Receives a fixed ammount of data determined by size.'''

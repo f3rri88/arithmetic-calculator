@@ -62,6 +62,10 @@ class CalculationServer():
                     self._socket.shutdown(socket.SHUT_RDWR)
                     self.stop()
                     break
+                except socket.error:
+                    self._logger.error(
+                        'Error sending back results, is client still running?',
+                        exc_info=True)
                 except Exception:
                     self._logger.critical(
                         'Fatal error', exc_info=True)
