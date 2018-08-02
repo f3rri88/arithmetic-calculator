@@ -53,12 +53,12 @@ def parse_args():
         '--host',
         type=str,
         default='localhost',
-        help='Host where the server is running on')
+        help='Host where the server is running on (default localhost)')
     parser.add_argument(
         '--port',
         type=port_type,
         default=1234,
-        help='Port where the server is running on')
+        help='Port where the server is running on (default 1234)')
     parser.add_argument(
         'input_file',
         type=argparse.FileType(mode='r'),

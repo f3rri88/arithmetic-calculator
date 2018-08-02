@@ -64,12 +64,12 @@ def parse_args():
         type=processes_type,
         metavar='X',
         default=2,
-        help='Number of processes that the server will spawn')
+        help='number of processes to spawn (default 2)')
     parser.add_argument(
         '--port',
         type=port_type,
         default=1234,
-        help='Port where to run the server on')
+        help='port where to run the server on (default 1234)')
     args = parser.parse_args()
     return args
 
