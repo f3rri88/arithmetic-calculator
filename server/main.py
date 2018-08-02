@@ -77,6 +77,11 @@ class CalculationServer():
         self._logger.info('Stopping...')
         self.running = False
         self._socket.close()
+        if self._process_pool:
+            for p in self._process_pool:
+                p.process.terminate()
+                p.pipe.close()
+            self._process_pool.clear()
         self._logger.info('Server stopped')
 
     def send(self, connection, data):
