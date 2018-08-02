@@ -109,6 +109,10 @@ def main():
             "The server connection closed unexpectedly",
             exc_info=True)
         sys.exit(1)
+    if data is None:
+        logger.error(
+            "Computation went wrong, check the server is still running")
+        sys.exit(1)
     args.output_file.writelines(data)
     args.output_file.close()
 
