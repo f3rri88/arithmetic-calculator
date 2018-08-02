@@ -77,6 +77,7 @@ def parse_args():
 def setup_logging(log_level):
     '''Setup logging configuration'''
     config_file = Path.cwd() / 'server' / 'config' / 'logging.yml'
+    Path('logs').mkdir(exist_ok=True)
     if config_file.is_file():
         with open(config_file, 'rt') as f:
             config = yaml.safe_load(f.read())
